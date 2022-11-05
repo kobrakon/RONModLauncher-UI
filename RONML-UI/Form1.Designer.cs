@@ -152,7 +152,7 @@
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.Size = new System.Drawing.Size(682, 21);
             this.richTextBox1.TabIndex = 6;
-            this.richTextBox1.Text = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Ready Or Not";
+            this.richTextBox1.Text = "No path!";
             this.richTextBox1.TextChanged += new System.EventHandler(this.richTextBox1_TextChanged);
             // 
             // label2
