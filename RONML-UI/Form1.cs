@@ -254,23 +254,9 @@ namespace RONML_UI
                                 }
                             });
                         });
-                    }
-                    else
+                        break;
+                    } else
                     {
-                        Gamevoli.ForEach((string f) =>
-                        {
-                            Directory.EnumerateFiles(f).ToList().ForEach((string b) =>
-                            {
-                                string[] e = b.Split(@"\");
-                                string direc = e[^2];
-                                string file = e.Last();
-                                if (Directory.Exists($@"{Modvo}\{direc}"))
-                                {
-                                    Directory.CreateDirectory($@"{Gamevotemp}\{direc}");
-                                    File.Copy(b, $@"{Gamevotemp}\{direc}\{file}");
-                                }
-                            });
-                        });
                         Mevoli.ForEach((string f) =>
                         {
                             Directory.EnumerateFiles(f).ToList().ForEach((string b) =>
@@ -279,15 +265,12 @@ namespace RONML_UI
                                 string filef = filei[^2];
                                 string fileo = filei.Last();
                                 Directory.CreateDirectory($@"{Gamevotemp}\{filef}");
-                                if (File.Exists($@"{Vo}\{filef}\{fileo}"))
-                                {
-                                    File.Copy($@"{Vo}\{filef}\{fileo}", $@"{Gamevotemp}\{filef}\{fileo}", true);
-                                    File.Copy(b, $@"{Vo}\{filef}\{fileo}", true);
-                                }
+                                try { Directory.Move($@"{Vo}\{filef}\{fileo}", $@"{Gamevotemp}\{filef}\{fileo}"); } catch (Exception e) { return; }
+                                Directory.Move(b, $@"{Vo}\{filef}\{fileo}");
                             });
                         });
+                        break;
                     }
-                    break;
             }
 
             switch (LoadFmod)
@@ -352,10 +335,20 @@ namespace RONML_UI
 
             Mevoli.ForEach((string f) =>
             {
-                string direc = f.Split(@"\").Last();
-                if (Directory.Exists($@"{Modvo}\{direc}")) Directory.Delete($@"{Vo}\{direc}", true);
-            });
-            Gamevoli.ForEach((string f) =>
+                Mevoli.ForEach((string f) =>
+                {
+                    Directory.EnumerateFiles(f).ToList().ForEach((string b) =>
+                    {
+                        string[] filei = b.Split(@"\");
+                        string direc = filei[^2];
+                        string file = filei.Last();
+                        if (File.Exists($@"{Modvo}\{direc}\{file}")) Directory.Move(b, $@"{Modvo}\{direc}\{file}");
+                        if (File.Exists($@"{Gamebanktemp}\{direc}\{file}")) Directory.Move($@"{Gamebanktemp}\{direc}\{file}", $@"{Vo}\{direc}\{file}");
+                    });
+                });
+                Gamevoli.ForEach((string f) => { if (Directory.Exists(f)) Directory.EnumerateFiles(f); });
+            }
+            else
             {
                 Directory.EnumerateFiles(f).ToList().ForEach((string b) =>
                 {
