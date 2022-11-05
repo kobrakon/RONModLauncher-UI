@@ -1,9 +1,5 @@
-using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
 
 namespace RONML_UI
 {
@@ -14,13 +10,8 @@ namespace RONML_UI
         bool LoadPak = true;
         bool OverrideAll = true;
         bool Loaddx12 = true;
-        string Paks
-        {
-            get
-            {
-                return $@"{GamePath}\modcontent\PAKs\";
-            }
-        }
+        bool ModsLoaded = false;
+
         string GamePaks
         {
             get
@@ -49,32 +40,39 @@ namespace RONML_UI
                 return Assembly.GetExecutingAssembly().Location.TrimEnd(@"RONML-UI.dll".ToCharArray()).Replace("\n", "").Replace("\r", ""); // gotta replace shit or line terminators fuck with I/O
             }
         }
+        string Paks
+        {
+            get
+            {
+                return $@"{Me}\modcontent\PAKs\";
+            }
+        }
         string Modvo
         {
             get
             {
-                return $@"{GamePath}\modcontent\VO\";
+                return $@"{Me}\modcontent\VO\";
             }
         }
         string Modbanks
         {
             get
             {
-                return $@"{GamePath}\modcontent\FMOD\";
+                return $@"{Me}\modcontent\FMOD\";
             }
         }
         string Gamevotemp
         {
             get
             {
-                return $@"{GamePath}\modcontent\VO\GameTemp";
+                return $@"{Me}\modcontent\VO\GameTemp";
             }
         }
         string Gamebanktemp
         {
             get
             {
-                return $@"{GamePath}\modcontent\FMOD\GameTemp";
+                return $@"{Me}\modcontent\FMOD\GameTemp";
             }
         }
         string Importantfilepath
@@ -94,7 +92,8 @@ namespace RONML_UI
                     f.WriteLine(richTextBox1.Text);
                     f.Close();
                     return richTextBox1.Text.Replace("\n", "").Replace("\r", "");
-                } else return File.ReadAllText(Importantfilepath).Replace("\n", "").Replace("\r", "");
+                }
+                else return File.ReadAllText(Importantfilepath).Replace("\n", "").Replace("\r", "");
             }
             set
             {
@@ -115,49 +114,60 @@ namespace RONML_UI
             InitializeComponent();
             Random random = new Random();
             label3.Text = RandomText[random.Next(RandomText.Count())];
+            Application.ApplicationExit += new EventHandler(this.ExitEventHandler);
+            if (!Directory.Exists($@"{Me}\modcontent"))
+            {
+                Directory.CreateDirectory(Modvo);
+                Directory.CreateDirectory(Paks);
+                Directory.CreateDirectory(Modbanks);
+                Directory.CreateDirectory(Gamevotemp);
+                Directory.CreateDirectory(Gamebanktemp);
+            }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        async void button1_Click(object sender, EventArgs e)
         {
+            label3.Text = "Starting file transfers";
+            await Task.Delay(500);
             SwitchIO();
         }
 
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
             LoadVo = !LoadVo;
         }
 
-        private void checkBox3_CheckedChanged(object sender, EventArgs e)
+        void checkBox3_CheckedChanged(object sender, EventArgs e)
         {
             LoadFmod = !LoadFmod;
         }
 
-        private void checkBox2_CheckedChanged(object sender, EventArgs e)
+        void checkBox2_CheckedChanged(object sender, EventArgs e)
         {
             LoadPak = !LoadPak;
         }
 
-        private void label1_Click(object sender, EventArgs e)
+        void label1_Click(object sender, EventArgs e)
         {
             return;
         }
 
-        private void richTextBox1_TextChanged(object sender, EventArgs e)
+        void richTextBox1_TextChanged(object sender, EventArgs e)
         {
             GamePath = richTextBox1.Text;
         }
 
-        private void label3_Click(object sender, EventArgs e)
+        void label3_Click(object sender, EventArgs e)
         {
             return;
         }
 
-        private void checkBox4_CheckedChanged(object sender, EventArgs e)
+        void checkBox4_CheckedChanged(object sender, EventArgs e)
         {
             Loaddx12 = !Loaddx12;
         }
 
-        private List<string> RandomText = new()
+        List<string> RandomText = new()
         {
             "Still better than mod.io",
             "See you in 2 minutes after you get insta-headshotted by a crackhead",
@@ -166,26 +176,36 @@ namespace RONML_UI
             "Shotguns are still ass btw",
             "Still better than Nexus Mods Launcher",
             "ur mom lmao",
-            "Civilians are extra obstacles with health bars",
+            "Civilians are just obstacles with health bars",
             "When kicking a door, remember there is a chance of blowing up",
-            "Going non-lethal is more of a pain for you than the enemy",
+            "Reminder: Going non-lethal is more of a pain for you than the enemy",
             "Haha pepper spray goes PSSSSSSSHHHH",
             "AHHH FUCK HE HAS A KNIF-",
             "Battering ram goes brrrrrrr",
-            "HP vs AP is what matters on what is kept in the target and what goes through the target"
+            "JHP vs AP is what matters on what is kept in the target and what goes through the target",
+            "That moment when you go to arrest Voll and accidently pull out your .45 instead of a taser",
+            "Five Guys ARs and Nines",
+            "I wanna use the MP5/10mm, but the bolt release thing is cursed",
+            "Remember: Evil is never dead enough",
+            "All fun and games till the host dies and restarts the game"
         };
 
-        private void label2_Click(object sender, EventArgs e)
+        void label2_Click(object sender, EventArgs e)
         {
             return;
         }
 
-        private void checkBox5_CheckedChanged(object sender, EventArgs e)
+        void checkBox5_CheckedChanged(object sender, EventArgs e)
         {
             OverrideAll = !OverrideAll;
         }
 
-        private void SwitchIO()
+        void button2_Click(object sender, EventArgs e)
+        {
+            StartDaGame(true);
+        }
+
+        void SwitchIO()
         {
             try
             {
@@ -193,7 +213,6 @@ namespace RONML_UI
                 Gamebankli = Directory.GetFiles(Banks).ToList();
                 Mevoli = Directory.GetDirectories(Modvo).ToList();
                 Mebankli = Directory.GetFiles(Modbanks).ToList();
-                Console.WriteLine("I/O => Moving files...");
             }
             catch (Exception e)
             {
@@ -218,8 +237,7 @@ namespace RONML_UI
                                 if (Directory.Exists($@"{Modvo}\{direc}"))
                                 {
                                     Directory.CreateDirectory($@"{Gamevotemp}\{direc}");
-
-                                    Directory.Move(b, $@"{Gamevotemp}\{direc}\{file}");
+                                    File.Move(b, $@"{Gamevotemp}\{direc}\{file}");
                                 }
                             });
                         });
@@ -232,24 +250,43 @@ namespace RONML_UI
                                 string file = e.Last();
                                 if (Directory.Exists($@"{Vo}\{direc}"))
                                 {
-                                    Directory.Move($@"{Modvo}\{direc}\{file}", $@"{Vo}\{direc}\{file}");
+                                    File.Copy($@"{Modvo}\{direc}\{file}", $@"{Vo}\{direc}\{file}", true);
                                 }
                             });
                         });
-                        break;
                     }
-                    Mevoli.ForEach((string f) =>
+                    else
                     {
-                        Directory.EnumerateFiles(f).ToList().ForEach((string b) =>
+                        Gamevoli.ForEach((string f) =>
                         {
-                            string[] filei = b.Split(@"\");
-                            string filef = filei[^2];
-                            string fileo = filei.Last();
-                            Directory.CreateDirectory($@"{Gamevotemp}\{filef}");
-                            Directory.Move($@"{Vo}\{filef}\{fileo}", $@"{Gamevotemp}\{filef}\{fileo}");
-                            Directory.Move(b, $@"{Vo}\{filef}\{fileo}");
+                            Directory.EnumerateFiles(f).ToList().ForEach((string b) =>
+                            {
+                                string[] e = b.Split(@"\");
+                                string direc = e[^2];
+                                string file = e.Last();
+                                if (Directory.Exists($@"{Modvo}\{direc}"))
+                                {
+                                    Directory.CreateDirectory($@"{Gamevotemp}\{direc}");
+                                    File.Copy(b, $@"{Gamevotemp}\{direc}\{file}");
+                                }
+                            });
                         });
-                    });
+                        Mevoli.ForEach((string f) =>
+                        {
+                            Directory.EnumerateFiles(f).ToList().ForEach((string b) =>
+                            {
+                                string[] filei = b.Split(@"\");
+                                string filef = filei[^2];
+                                string fileo = filei.Last();
+                                Directory.CreateDirectory($@"{Gamevotemp}\{filef}");
+                                if (File.Exists($@"{Vo}\{filef}\{fileo}"))
+                                {
+                                    File.Copy($@"{Vo}\{filef}\{fileo}", $@"{Gamevotemp}\{filef}\{fileo}", true);
+                                    File.Copy(b, $@"{Vo}\{filef}\{fileo}", true);
+                                }
+                            });
+                        });
+                    }
                     break;
             }
 
@@ -261,13 +298,11 @@ namespace RONML_UI
                     Mebankli.ForEach((string f) =>
                     {
                         string filei = f.Split(@"\").Last();
-
-                        Directory.Move($@"{Banks}\{filei}", $@"{Gamebanktemp}\{filei}");
-                        Directory.Move(f, $@"{Banks}\{filei}");
+                        File.Copy($@"{Banks}\{filei}", $@"{Gamebanktemp}\{filei}", true);
+                        File.Copy(f, $@"{Banks}\{filei}", true);
                     });
                     break;
             }
-
             switch (LoadPak)
             {
                 case false:
@@ -275,11 +310,11 @@ namespace RONML_UI
                 case true:
                     Directory.EnumerateFiles(Paks).ToList().ForEach((string f) =>
                     {
-                        Directory.Move(f, $@"{GamePaks}\{f.Split(@"\").Last()}");
-                        Console.WriteLine($@"I/O => Moved PAK {f.Split(@"\").Last()}");
+                        File.Copy(f, $@"{GamePaks}\{f.Split(@"\").Last()}", true);
                     });
                     break;
             }
+            ModsLoaded = true;
             StartDaGame(false);
             return;
         }
@@ -288,6 +323,7 @@ namespace RONML_UI
         {
             try
             {
+                label3.Text = "Starting game...";
                 var proc = new ProcessStartInfo()
                 {
                     FileName = $@"{GamePath}\ReadyOrNot.exe",
@@ -295,7 +331,7 @@ namespace RONML_UI
                     UseShellExecute = true
                 };
                 GameProcess = Process.Start(proc);
-                if (!startVanilla)CleanupAsync();
+                if (!startVanilla) CleanupAsync(false);
                 return;
             }
             catch (Exception e)
@@ -305,79 +341,61 @@ namespace RONML_UI
             }
         }
 
-        async void CleanupAsync()
+        async void CleanupAsync(bool skipAsync)
         {
-            await GameProcess.WaitForExitAsync();
+            if (!skipAsync) await GameProcess.WaitForExitAsync();
+            if (!ModsLoaded) return;
+            label3.Text = "Cleaning up...";
+            await Task.Delay(500);
             Gamevoli = Directory.GetDirectories(Gamevotemp).ToList();
             Mevoli = Directory.GetDirectories(Vo).ToList();
 
-            if (!OverrideAll)
+            Mevoli.ForEach((string f) =>
             {
-                Mevoli.ForEach((string f) =>
-                {
-                    Directory.EnumerateFiles(f).ToList().ForEach((string b) =>
-                    {
-                        string[] filei = b.Split(@"\");
-                        string direc = filei[^2];
-                        string file = filei.Last();
-                        if (File.Exists($@"{Modvo}\{direc}\{file}")) Directory.Move(b, $@"{Modvo}\{direc}\{file}");
-                        if (File.Exists($@"{Gamebanktemp}\{direc}\{file}")) Directory.Move($@"{Gamebanktemp}\{direc}\{file}", $@"{Vo}\{direc}\{file}");
-                        Console.WriteLine($@"I/O => Returned VO {direc}\{file}");
-                    });
-                });
-                Gamevoli.ForEach((string f) => Directory.Delete(f));
-            }
-            else
+                string direc = f.Split(@"\").Last();
+                if (Directory.Exists($@"{Modvo}\{direc}")) Directory.Delete($@"{Vo}\{direc}", true);
+            });
+            Gamevoli.ForEach((string f) =>
             {
-                Mevoli.ForEach((string f) =>
+                Directory.EnumerateFiles(f).ToList().ForEach((string b) =>
                 {
-                    Directory.EnumerateFiles(f).ToList().ForEach((string b) =>
-                    {
-                        string[] filei = b.Split(@"\");
-                        string direc = filei[^2];
-                        string file = filei.Last();
-                        if (Directory.Exists($@"{Gamevotemp}\{direc}"))
-                        {
-                            Directory.Move(b, $@"{Modvo}\{direc}\{file}");
-                            Console.WriteLine($@"I/O => Returned VO {direc}\{file}");
-                        }
-                    });
+                    string[] filei = b.Split(@"\");
+                    string direc = filei[^2];
+                    string file = filei.Last();
+                    if (!Directory.Exists($@"{Vo}\{direc}")) Directory.CreateDirectory($@"{Vo}\{direc}");
+                    File.Copy(b, $@"{Vo}\{direc}\{file}", true);
                 });
-                Gamevoli.ForEach((string f) =>
-                {
-                    Directory.EnumerateFiles(f).ToList().ForEach((string b) =>
-                    {
-                        string[] filei = b.Split(@"\");
-                        string direc = filei[^2];
-                        string file = filei.Last();
-                        Directory.Move(b, $@"{Vo}\{direc}\{file}");
-                    });
-                    Directory.Delete(f);
-                });
-            }
-
+                Directory.Delete(f, true);
+            });
 
             Directory.EnumerateFiles(Gamebanktemp).ToList().ForEach((string s) =>
             {
                 string f = s.Split(@"\").Last();
-                Directory.Move($@"{Banks}\{f}", $@"{Modbanks}\{f}");
-                Directory.Move(s, $@"{Banks}\{f}");
-                Console.WriteLine($"I/O => Returned FMOD bank {f}");
+                File.Copy(s, $@"{Banks}\{f}", true);
             });
 
-            Directory.EnumerateFiles(GamePaks).ToList().ForEach((string s) =>
+            Directory.EnumerateFiles(Paks).ToList().ForEach((string s) =>
             {
-                if (s.Contains("pakchunk99") || s.Contains("pakchunk-99"))
-                {
-                    Directory.Move(s, $@"{Paks}\{s.Split(@"\").Last()}");
-                    Console.WriteLine($@"I/O => Returned PAK {s.Split(@"\").Last()}");
-                }
+                File.Delete($@"{GamePaks}\{s.Split(@"\").Last()}");
             });
+            ModsLoaded = false;
+            label3.Text = "Cleanup finished";
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        void ExitEventHandler(object? sender, EventArgs e) => CleanupAsync(true);
+
+        private void button3_Click(object sender, EventArgs e)
         {
-            StartDaGame(true);
+            using (FolderBrowserDialog dialog = new FolderBrowserDialog())
+            {
+                dialog.InitialDirectory = @"C:\";
+                DialogResult result = dialog.ShowDialog();
+
+                if (result == DialogResult.OK)
+                {
+                    richTextBox1.Text = dialog.SelectedPath;
+                }
+            }
         }
     }
 }
