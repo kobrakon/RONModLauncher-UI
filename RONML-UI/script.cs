@@ -14,99 +14,69 @@ namespace RONML_UI
         public Process GameProcess = new();
 
         public string Me
-        { get { return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).Replace("\\", "/"); } }
+        { get => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).Replace("\\", "/"); }
 
         public string ConfigPath
         { get => $"{Me}/config.xml"; }
 
         public string GamePaks
-        { get { return $"{GamePath}/ReadyOrNot/Content/Paks"; } }
+        { get => $"{GamePath}/ReadyOrNot/Content/Paks"; }
 
         public string Vo
-        { get { return $"{GamePath}/ReadyOrNot/Content/VO"; } }
+        { get => $"{GamePath}/ReadyOrNot/Content/VO"; }
 
         public string Banks
-        { get { return $"{GamePath}/ReadyOrNot/Content/FMOD/Desktop"; } }
+        { get => $"{GamePath}/ReadyOrNot/Content/FMOD/Desktop"; }
 
         public string Paks
-        { get { return $"{Me}/modcontent/PAKs/"; } }
+        { get => $"{Me}/modcontent/PAKs/"; }
 
         public string Modvo
-        { get { return $"{Me}/modcontent/VO/"; } }
+        { get => $"{Me}/modcontent/VO/"; }
 
         public string Modbanks
-        { get { return $"{Me}/modcontent/FMOD/"; } }
+        { get => $"{Me}/modcontent/FMOD/"; }
 
         public string Gamevotemp
-        { get { return $"{Me}/modcontent/VO/GameTemp"; } }
+        { get => $"{Me}/modcontent/VO/GameTemp"; }
 
         public string Gamebanktemp
-        { get { return $"{Me}/modcontent/FMOD/GameTemp"; } }
+        { get => $"{Me}/modcontent/FMOD/GameTemp"; }
 
         public string Importantfilepath
-        { get { return $"{Me}/importantfile.txt"; } }
+        { get => $"{Me}/importantfile.txt"; }
 
         public string BackupPath
-        { get { return $"{Me}/backup"; } }
+        { get => $"{Me}/backup"; }
 
         public bool OverrideAll
         {
-            get
-            {
-                return GetConfigValue("OverrideAll");
-            }
-            set
-            {
-                ChangeConfigValue("OverrideAll", value);
-            }
+            get => GetConfigValue("OverrideAll");
+            set => ChangeConfigValue("OverrideAll", value);
         }
 
         public bool LoadVo
         {
-            get
-            {
-                return GetConfigValue("LoadVo");
-            }
-            set
-            {
-                ChangeConfigValue("LoadVo", value);
-            }
+            get => GetConfigValue("LoadVo");
+            set => ChangeConfigValue("LoadVo", value);
         }
 
         public bool LoadFmod
         {
-            get
-            {
-                return GetConfigValue("LoadFMOD");
-            }
-            set
-            {
-                ChangeConfigValue("LoadFMOD", value);
-            }
+            get => GetConfigValue("LoadFMOD");
+            set => ChangeConfigValue("LoadFMOD", value);
         }
 
         public bool LoadPak
         {
-            get
-            {
-                return GetConfigValue("LoadPAK");
-            }
-            set
-            {
-                ChangeConfigValue("LoadPAK", value);
-            }
+            get => GetConfigValue("LoadPAK");
+            set => ChangeConfigValue("LoadPAK", value);
         }
         
         public bool Loaddx12
         {
-            get
-            {
-                return GetConfigValue("LoadDX12");
-            }
-            set
-            {
-                ChangeConfigValue("LoadDX12", value);
-            }
+            get => GetConfigValue("LoadDX12");
+            set => ChangeConfigValue("LoadDX12", value);
         }
 
         public string GamePath
@@ -131,7 +101,7 @@ namespace RONML_UI
 
         public IOScripts()
         {
-            if (!Directory.Exists($@"{Me}/modcontent"))
+            if (!Directory.Exists($@"{Me}\modcontent"))
             {
                 Directory.CreateDirectory(Modvo);
                 Directory.CreateDirectory(Paks);
