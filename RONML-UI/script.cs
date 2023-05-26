@@ -1,15 +1,18 @@
-using System.Xml;
+﻿using System.Xml;
 using System.Xml.Linq;
-using System.Diagnostics;
 using System.Reflection;
+using System.Diagnostics;
 
+#nullable disable
+#pragma warning disable CA1825 // arrays are zero-length initialized cause they're gonna be allocated to later anyway
+#pragma warning disable CA1822
 namespace RONML_UI
 {
     public class IOScripts
     {
-        public string[] Mevoli;
-        public string[] VoList;
-        public string[] BankList;
+        public string[] Mevoli = new string[0];
+        public string[] VoList = new string[0];
+        public string[] BankList = new string[0];
         public bool ModsLoaded = false;
         public Process GameProcess = new();
 
@@ -17,37 +20,37 @@ namespace RONML_UI
         { get => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).Replace("\\", "/"); }
 
         public string ConfigPath
-        { get => $"{Me}/config.xml"; }
+        { get => Me + "/config.xml"; }
 
         public string GamePaks
-        { get => $"{GamePath}/ReadyOrNot/Content/Paks"; }
+        { get => GamePath + "/ReadyOrNot/Content/Paks"; }
 
         public string Vo
-        { get => $"{GamePath}/ReadyOrNot/Content/VO"; }
+        { get => GamePath + "/ReadyOrNot/Content/VO"; }
 
         public string Banks
-        { get => $"{GamePath}/ReadyOrNot/Content/FMOD/Desktop"; }
+        { get => GamePath + "/ReadyOrNot/Content/FMOD/Desktop"; }
 
         public string Paks
-        { get => $"{Me}/modcontent/PAKs/"; }
+        { get => Me + "/modcontent/PAKs/"; }
 
         public string Modvo
-        { get => $"{Me}/modcontent/VO/"; }
+        { get => Me + "/modcontent/VO/"; }
 
         public string Modbanks
-        { get => $"{Me}/modcontent/FMOD/"; }
+        { get => Me + "/modcontent/FMOD/"; }
 
         public string Gamevotemp
-        { get => $"{Me}/modcontent/VO/GameTemp"; }
+        { get => Me + "/modcontent/VO/GameTemp"; }
 
         public string Gamebanktemp
-        { get => $"{Me}/modcontent/FMOD/GameTemp"; }
+        { get => Me + "/modcontent/FMOD/GameTemp"; }
 
         public string Importantfilepath
-        { get => $"{Me}/importantfile.txt"; }
+        { get => Me + "/importantfile.txt"; }
 
         public string BackupPath
-        { get => $"{Me}/backup"; }
+        { get => Me + "/backup"; }
 
         public bool OverrideAll
         {
@@ -101,7 +104,7 @@ namespace RONML_UI
 
         public IOScripts()
         {
-            if (!Directory.Exists($@"{Me}\modcontent"))
+            if (!Directory.Exists($"{Me}/modcontent"))
             {
                 Directory.CreateDirectory(Modvo);
                 Directory.CreateDirectory(Paks);
@@ -111,11 +114,9 @@ namespace RONML_UI
             }
 
             if (!File.Exists(ConfigPath))
-            {
                 CreateConfig();
-            }
         }
-        
+
         public void SwitchIO()
         {
             try
@@ -123,183 +124,181 @@ namespace RONML_UI
                 VoList = (from f in Directory.GetDirectories(Modvo) where Directory.GetDirectories(Vo).Any(d => Path.GetFileName(d) == Path.GetFileName(f)) select Path.GetFileName(f)).ToArray();
                 BankList = (from f in Directory.GetFiles(Banks) where Directory.GetFiles(Modbanks).Any(d => Path.GetFileName(d) == Path.GetFileName(f)) select Path.GetFileName(f)).ToArray();
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                UpdateText("Couldn't read important file directories/files, check paths");
+                ChangeText("Couldn't read important file directories/files, check paths");
                 return;
             }
 
+            ChangeText("Transferring files...");
+
             if (LoadVo)
             {
-                Array.ForEach(VoList, (string f) =>
+                foreach (string f in VoList)
                 {
                     Directory.CreateDirectory($"{Gamevotemp}/{f}");
-                    Array.ForEach(Directory.GetFiles($"{Vo}/{f}"), (string b) =>
+
+                    foreach (string b in Directory.GetFiles($"{Vo}/{f}"))
                     {
-                        string file = Path.GetFileName(b);
-                        if (OverrideAll) File.Move(b, $"{Gamevotemp}/{f}/{file}");
-                        else File.Copy(b, $"{Gamevotemp}/{f}/{file}");
-                    });
-                     
-                    Array.ForEach(Directory.GetFiles($"{Modvo}/{f}"), (string b) =>
-                    {
-                        string file = Path.GetFileName(b);
-                        File.Copy(b, $"{Vo}/{f}/{file}", true);
-                    });
-                });
+                        if (OverrideAll)
+                            File.Move(b, $"{Gamevotemp}/{f}/{Path.GetFileName(b)}", true);
+                        else File.Copy(b, $"{Gamevotemp}/{f}/{Path.GetFileName(b)}", true);
+                    }
+
+                    foreach (string b in Directory.GetFiles($"{Modvo}/{f}"))
+                        File.Copy(b, $"{Vo}/{f}/{Path.GetFileName(b)}", true);
+                }
             }
-            if (LoadFmod) Array.ForEach(BankList, (string f) => File.Replace($"{Modbanks}/{f}", $"{Banks}/{f}", $"{Gamebanktemp}/{f}"));
+            if (LoadFmod) foreach (string f in BankList) File.Replace($"{Modbanks}/{f}", $"{Banks}/{f}", $"{Gamebanktemp}/{f}");
             if (LoadPak)
             {
-                Array.ForEach(Directory.GetFiles(Paks), (string f) =>
-                {
+                foreach(string f in Directory.GetFiles(Paks))
                     File.Copy(f, $"{GamePaks}/{Path.GetFileName(f)}", true);
-                });
             }
 
             ModsLoaded = true;
-            StartDaGame(false);
+            StartDaGame();
             return;
         }
 
-        public async void StartDaGame(bool startVanilla)
+        public void StartDaGame()
         {
             try
             {
-                UpdateText("Starting game...");
+                ChangeText("Starting game...");
                 var proc = new ProcessStartInfo()
                 {
                     FileName = $"{GamePath}/ReadyOrNot.exe",
                     Arguments = Loaddx12 ? "dx12" : "dx11",
                     UseShellExecute = true
                 };
+
                 GameProcess = Process.Start(proc);
-                await Task.Delay(1000);
-                if (GameProcess.HasExited)
-                {
-                    UpdateText("Steam wasn't started so the process was killed immediately, trying again in 10 seconds...");
-                    await Task.Delay(10000);
-                    GameProcess = Process.Start(proc);
-                }
-                UpdateText("Game is running...");
-                CleanupAsync(false);
+
+                ChangeText("Game is running...");
+                CleanupAsync();
                 return;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                UpdateText("Couldn't start game, check game path");
+                ChangeText("Couldn't start game, check game path");
                 return;
             }
         }
 
-        public async void CleanupAsync(bool skipAsync)
+        public async void CleanupAsync(bool exitEvent = false)
         {
-            if (!skipAsync) await GameProcess.WaitForExitAsync();
+            if (!exitEvent) await GameProcess.WaitForExitAsync();
             if (!ModsLoaded)
             {
-                UpdateText("Game closed");
+                ChangeText("Game closed");
                 return;
             }
-            UpdateText("Cleaning up...");
+            ChangeText("Cleaning up...");
 
-            Array.ForEach(VoList, (string f) =>
+            foreach (string f in VoList)
             {
                 Directory.Delete($"{Vo}/{f}", true);
                 Directory.CreateDirectory($"{Vo}/{f}");
-                Array.ForEach(Directory.GetFiles($"{Gamevotemp}/{f}"), (string b) =>
-                {
-                    string file = Path.GetFileName(b);
-                    File.Move(b, $"{Vo}/{f}/{file}");
-                });
+                
+                foreach (string b in Directory.GetFiles($"{Gamevotemp}/{f}"))
+                    File.Move(b, $"{Vo}/{f}/{Path.GetFileName(b)}");
+
                 Directory.Delete($"{Gamevotemp}/{f}", true);
-            });
+            }
 
-            Array.ForEach(BankList, (string f) =>
-            {
+            foreach (string f in BankList)
                 File.Move($"{Gamebanktemp}/{f}", $"{Banks}/{f}", true);
-            });
 
-            Array.ForEach(Directory.GetFiles(Paks), (string f) =>
-            {
+            foreach (string f in Directory.GetFiles(Paks))
                 File.Delete($"{GamePaks}/{Path.GetFileName(f)}");
-            });
+
             ModsLoaded = false;
-            UpdateText("Cleanup finished");
+            ChangeText("Cleanup finished");
+        }
+
+        public void Terminate()
+        {
+            if (GameProcess.HasExited)
+                ChangeText("No game process to terminate");
+            else
+                GameProcess.Kill();
         }
 
         public void Backup()
         {
-            UpdateText("Backing up lossable game files, this will take a minute...");
+            ChangeText("Backing up lossable game files, this will take a minute...");
             string[] Gamevoli = Directory.GetDirectories(Vo);
             string[] Gamebankli = Directory.GetFiles(Banks);
             if (!Directory.Exists($"{BackupPath}/VO")) Directory.CreateDirectory($"{BackupPath}/VO");
             if (!Directory.Exists($"{BackupPath}/FMOD")) Directory.CreateDirectory($"{BackupPath}/FMOD");
 
-            Array.ForEach(Gamevoli, (string f) => 
+            foreach (string f in Gamevoli)
             {
-                Array.ForEach(Directory.GetFiles(f), (string b) =>
+                foreach (string b in Directory.GetFiles(f))
                 {
                     string direc = Path.GetFileName(Path.GetDirectoryName(b));
                     string file = Path.GetFileName(b);
                     if (!Directory.Exists($"{BackupPath}/VO/{direc}")) Directory.CreateDirectory($"{BackupPath}/VO/{direc}");
                     File.Copy(b, $"{BackupPath}/VO/{direc}/{file}", true);
-                });
-            });
+                }
+            }
 
-            Array.ForEach(Gamebankli, (string f) => 
+            foreach (string f in Gamebankli)
             {
                 string file = Path.GetFileName(f);
                 File.Copy(f, $"{BackupPath}/FMOD/{file}", true);
-            });
-            UpdateText("Backup complete");
+            }
+            Program.Instance.label3.Text = "Backup complete";
         }
 
         public void ImportBackup()
         {
-            Program.Instance.label3.Text = "Importing backups";
+            ChangeText("Importing backups");
             string[] VoBackups = Directory.GetDirectories($"{BackupPath}/VO");
             string[] BankBackups = Directory.GetFiles($"{BackupPath}/FMOD");
 
             if (VoBackups == null || VoBackups.Length == 0)
             {
-                UpdateText("No backup found, or too much data was missing to be a valid backup.");
+                ChangeText("No backup found, or too much data was missing to be a valid backup.");
                 return;
             }
 
-            Array.ForEach(VoBackups, (string f) => 
+            foreach (string f in VoBackups)
             {
                 Directory.Delete($"{Vo}/{Path.GetFileName(f)}", true);
-                Array.ForEach(Directory.GetFiles(f), (string b) =>
+                foreach (string b in Directory.GetFiles(f))
                 {
                     string direc = Path.GetFileName(Path.GetDirectoryName(b));
                     string file = Path.GetFileName(b);
                     if (!Directory.Exists($"{Vo}/{direc}")) Directory.CreateDirectory($"{Vo}/{direc}");
                     File.Copy(b, $"{Vo}/{direc}/{file}", true);
-                });
-            });
+                }
+            }
 
-            Array.ForEach(BankBackups, (string f) => 
+            foreach (string f in BankBackups)
             {
                 string file = Path.GetFileName(f);
                 File.Copy(f, $"{Banks}/{file}", true);
-            });
+            }
 
-            UpdateText("Import complete");
+            ChangeText("Import complete");
         }
 
-        void UpdateText(string message)
-        {
-            Program.Instance.label3.Invoke(() => Program.Instance.label3.Text = message);
-        }
+        // microsoft is being delusional and requiring me to do this again even though the regular way works just fine
+        // not me literally pissed out of my mind because it's saying 'cross-thread not valid' when I literally
+        // have it marked volatile and I can see that it changed the text just fine in debugging window but broke anyway
+        void ChangeText(string message) => Program.Instance.Invoke(() => Program.Instance.label3.Text = message);
 
         void CreateConfig()
         {
-            XElement ops = new XElement("config",
+            XElement ops = new("config",
                 new XElement("OverrideAll", true),
                 new XElement("LoadVo", true),
                 new XElement("LoadFMOD", true),
                 new XElement("LoadPAK", true),
-                new XElement("LoadDX12", true)
+                new XElement("LoadDX12", true),
+                new XElement("PreloadMods", false)
             );
 
             ops.Save(ConfigPath);

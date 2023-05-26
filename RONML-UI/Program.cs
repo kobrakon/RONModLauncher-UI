@@ -4,7 +4,7 @@ namespace RONML_UI
 {
     internal static class Program
     {
-        internal static Form1 Instance = new();
+        internal static UI Instance = new();
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
